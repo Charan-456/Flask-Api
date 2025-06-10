@@ -1,0 +1,48 @@
+on:
+  push:
+    branches:
+      main
+
+env:
+  aws-region: us-east-1
+  ECR-Repo: 
+  IMAGE_TAG: ${{github.sha}}
+  IMAGE_REPO: flaskapi
+jobs:
+  Flask-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: git code checkout
+        uses: actions/checkout@v3
+      - name: AWS-Credentials
+        id: ecr-login
+        uses: aws-actions/configure-aws-credentials@v4
+        with: 
+          aws-region: ${aws-region}
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+      - name: ECR-login
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: build and push image
+        run: |
+          docker build -t ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:${IMAGE_TAG} -t ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:latest .
+          docker push ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:${IMAGE_TAG}
+          docker push ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:latest
+      - name: checkout kubeconfig Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{github.repository_owner}}/Flask-KubeConfig
+          token: ${{secrets.GH_PAT}}
+          path: ${{github.repository_owner}}/Flask-KubeConfig
+      - name: kubeconfig update
+        run: |
+          cd Flask-KubeConfig/flask-api/base/
+          sed -i "s|image: .*|image: ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:${IMAGE_TAG}|" ./deploy.yaml
+      - name: Pushing changes
+        run: |
+          cd Flask-KubeConfig
+          git config user.email "gitbot@gmail.com"
+          git config user.name "gitbot"
+          git add .
+          git commit -m "${{github.sha}} change to deployment"
+          git push origin main
