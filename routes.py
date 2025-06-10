@@ -15,3 +15,6 @@ def create_user():
 def get_users():
     users = User.query.all()
     return jsonify([u.to_dict() for u in users]), 200
+
+
+# these are routes defined for api end points
