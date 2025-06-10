@@ -41,7 +41,7 @@ jobs:
           sed -i "s|image: .*|image: ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:${{env.IMAGE_TAG}}|" ./deploy.yaml
       - name: Pushing changes
         run: |
-          cd Flask-KubeConfig
+          cd Flask-KubeConfig/
           git config user.email "gitbot@gmail.com"
           git config user.name "gitbot"
           git add .
