@@ -33,9 +33,10 @@ jobs:
         with:
           repository: ${{github.repository_owner}}/Flask-KubeConfig
           token: ${{secrets.GH_PAT}}
-          path: ${{github.repository_owner}}/Flask-KubeConfig
+          path: Flask-KubeConfig
       - name: kubeconfig update
         run: |
+          ls
           cd Flask-KubeConfig/flask-api/base/
           sed -i "s|image: .*|image: ${{secrets.ECR_REGISTRY}}/${IMAGE_REPO}:${{env.IMAGE_TAG}}|" ./deploy.yaml
       - name: Pushing changes
